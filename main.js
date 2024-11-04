@@ -82,9 +82,9 @@ cube.position.set(0.5, 0.5, 0.5);
 scene.add(cube);
 
 // 現在位置を示すマーカーの作成
-const markerGeometry = new THREE.SphereGeometry(0.02);
+const markerGeometry = new THREE.SphereGeometry(0.04);
 const markerMaterial = new THREE.MeshBasicMaterial({ 
-  color: 0x000000,  // 初期色は黒
+  color: 0x000000,
   transparent: true,
   opacity: 0.8
 });
