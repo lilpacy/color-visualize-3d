@@ -136,3 +136,20 @@ input[type="range"] {
   margin: 10px auto;
     border-radius: 5px;
 }
+
+.hsv-view {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+#hsv-cone {
+  background-color: #1a1a1a;
+  border-radius: 50%;
+}
+
+#hue-slider {
+  border-radius: 5px;
+}

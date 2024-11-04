@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import './style.css';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // シーンのセットアップ
 const scene = new THREE.Scene();
@@ -40,6 +41,10 @@ document.querySelector('#app').innerHTML = `
       </div>
     </div>
     <div id="current-color" style="width: 50px; height: 50px; border: 1px solid white;"></div>
+    <div class="hsv-view">
+      <canvas id="hsv-cone" width="200" height="200"></canvas>
+      <canvas id="hue-slider" width="200" height="20"></canvas>
+    </div>
   </div>
 `;
 document.querySelector('#app').appendChild(renderer.domElement);
@@ -244,7 +249,7 @@ function updateMarkerPosition(source = 'rgb') {
     
     updateMarkerAndColor(r, g, b);
   } else {
-    // HSVスライダーからの更新
+    // HSVライダーからの更新
     const h = parseFloat(document.getElementById('h-slider').value);
     const s = parseFloat(document.getElementById('s-slider').value);
     const v = parseFloat(document.getElementById('v-slider').value);
@@ -264,8 +269,26 @@ function updateMarkerPosition(source = 'rgb') {
 }
 
 function updateMarkerAndColor(r, g, b) {
+  // RGBマーカーの更新
   marker.position.set(r, g, b);
   marker.material.color.setRGB(r, g, b);
+  
+  // HSVマーカーの更新
+  const [h, s, v] = rgbToHsv(r * 255, g * 255, b * 255);
+  const theta = (h / 360) * Math.PI * 2;
+  
+  // 明度に応じて半径を調整（明度が下がると半径も比例して小さくなる）
+  const maxRadius = 0.5 * (s / 100);
+  const currentRadius = maxRadius * (v / 100);
+  
+  const x = currentRadius * Math.cos(theta) + 2; // +2 は円錐の位置オフセット
+  const y = v / 100;
+  const z = currentRadius * Math.sin(theta) + 0.5; // +0.5 は円錐の位置オフセット
+  
+  hsvMarker.position.set(x, y, z);
+  hsvMarker.material.color.setRGB(r, g, b);
+  
+  // カラーパネルの更新
   document.getElementById('current-color').style.backgroundColor = 
     `rgb(${r * 255}, ${g * 255}, ${b * 255})`;
 }
@@ -294,3 +317,187 @@ window.addEventListener('resize', () => {
 });
 
 animate();
+
+// HSV円錐の描画関数を追加
+function drawHSVCone() {
+  const canvas = document.getElementById('hsv-cone');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - 10;
+  
+  // 現在のHue値を取得
+  const currentHue = parseFloat(document.getElementById('h-slider').value);
+  
+  // キャンバスをクリア
+  ctx.clearRect(0, 0, width, height);
+  
+  // 円を描画
+  for(let r = radius; r > 0; r--) {
+    for(let angle = 0; angle < 360; angle += 1) {
+      const x = centerX + r * Math.cos(angle * Math.PI / 180);
+      const y = centerY + r * Math.sin(angle * Math.PI / 180);
+      
+      // 彩度は半径に基づいて計算
+      const saturation = r / radius * 100;
+      // 明度は100%
+      const value = 100;
+      
+      const [red, green, blue] = hsvToRgb(currentHue, saturation, value);
+      ctx.fillStyle = `rgb(${red * 255}, ${green * 255}, ${blue * 255})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+  }
+  
+  // 現在の選択位置を表示
+  const currentS = parseFloat(document.getElementById('s-slider').value);
+  const currentV = parseFloat(document.getElementById('v-slider').value);
+  const angle = currentHue * Math.PI / 180;
+  const distance = (currentS / 100) * radius;
+  const x = centerX + distance * Math.cos(angle);
+  const y = centerY + distance * Math.sin(angle);
+  
+  // 選択位置のマーカーを描画
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2);
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// Hueスライダーの描画関数
+function drawHueSlider() {
+  const canvas = document.getElementById('hue-slider');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  // グラデーションを作成
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  for(let i = 0; i <= 360; i += 60) {
+    const [r, g, b] = hsvToRgb(i, 100, 100);
+    gradient.addColorStop(i / 360, `rgb(${r * 255}, ${g * 255}, ${b * 255})`);
+  }
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+  
+  // 現在のHue位置を表示
+  const currentHue = parseFloat(document.getElementById('h-slider').value);
+  const x = (currentHue / 360) * width;
+  
+  ctx.beginPath();
+  ctx.moveTo(x, 0);
+  ctx.lineTo(x, height);
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// HSVビューの更新関数
+function updateHSVView() {
+  drawHSVCone();
+  drawHueSlider();
+}
+
+// イベントリスナーを更新
+['h-slider', 's-slider', 'v-slider'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    updateMarkerPosition('hsv');
+    updateHSVView();
+  });
+});
+
+['r-slider', 'g-slider', 'b-slider'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    updateMarkerPosition('rgb');
+    updateHSVView();
+  });
+});
+
+// 初期描画
+updateHSVView();
+
+function createHSVCone() {
+  const coneGroup = new THREE.Group();
+  const segments = 32;
+  const rings = 10;
+  const height = 1;
+  const radius = 0.5;
+  
+  // 円錐の頂点を生成
+  const points = [];
+  const colors = [];
+  
+  // 頂点（V=0の点）
+  points.push(new THREE.Vector3(0, 0, 0));
+  colors.push(new THREE.Color(0, 0, 0));
+  
+  // 各リングのポイントを生成
+  for (let ring = 1; ring <= rings; ring++) {
+    const v = ring / rings;
+    const currentRadius = (radius * ring) / rings;
+    
+    for (let segment = 0; segment < segments; segment++) {
+      const theta = (segment / segments) * Math.PI * 2;
+      const x = currentRadius * Math.cos(theta);
+      const z = currentRadius * Math.sin(theta);
+      const y = v * height;
+      
+      // HSVから RGB に変換
+      const hue = (theta / (Math.PI * 2)) * 360;
+      const saturation = (Math.sqrt(x * x + z * z) / radius) * 100;
+      const value = v * 100;
+      const [r, g, b] = hsvToRgb(hue, saturation, value);
+      
+      points.push(new THREE.Vector3(x, y, z));
+      colors.push(new THREE.Color(r, g, b));
+    }
+  }
+  
+  // ジオメトリの作成
+  const geometry = new THREE.BufferGeometry();
+  geometry.setFromPoints(points);
+  
+  // 色の設定
+  const colorArray = new Float32Array(colors.length * 3);
+  colors.forEach((color, i) => {
+    colorArray[i * 3] = color.r;
+    colorArray[i * 3 + 1] = color.g;
+    colorArray[i * 3 + 2] = color.b;
+  });
+  geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+  
+  // マテリアルの作成
+  const material = new THREE.PointsMaterial({
+    size: 0.02,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8
+  });
+  
+  const pointCloud = new THREE.Points(geometry, material);
+  coneGroup.add(pointCloud);
+  
+  // HSV円錐を右側に配置
+  coneGroup.position.set(2, 0, 0.5);
+  return coneGroup;
+}
+
+const hsvCone = createHSVCone();
+scene.add(hsvCone);
+
+// カメラの位置を調整
+camera.position.set(3, 2, 3);
+
+// マーカーの作成部分の後に追加（scene.add(marker);の後）
+const hsvMarkerGeometry = new THREE.SphereGeometry(0.04);
+const hsvMarkerMaterial = new THREE.MeshBasicMaterial({ 
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.8
+});
+const hsvMarker = new THREE.Mesh(hsvMarkerGeometry, hsvMarkerMaterial);
+scene.add(hsvMarker);
