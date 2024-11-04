@@ -70,11 +70,16 @@ const cubeMaterial = new THREE.ShaderMaterial({
     varying vec3 vPosition;
     void main() {
       vec3 color = vPosition;
-      gl_FragColor = vec4(color, 0.3);
+      if(abs(vPosition.x) == 0.5 || abs(vPosition.y) == 0.5 || abs(vPosition.z) == 0.5) {
+        gl_FragColor = vec4(color, 0.0);
+      } else {
+        gl_FragColor = vec4(color, 0.3);
+      }
     }
   `,
   transparent: true,
-  side: THREE.DoubleSide
+  side: THREE.DoubleSide,
+  depthWrite: false
 });
 
 const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
