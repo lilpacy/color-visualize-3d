@@ -69,12 +69,12 @@ const cubeMaterial = new THREE.ShaderMaterial({
   fragmentShader: `
     varying vec3 vPosition;
     void main() {
-      vec3 color = vPosition * 0.5 + 0.5;
-      gl_FragColor = vec4(color, 0.5); // 透明度を0.5に設定
+      vec3 color = vPosition;
+      gl_FragColor = vec4(color, 0.3);
     }
   `,
-  transparent: true, // 透明度を有効化
-  side: THREE.DoubleSide // 両面を表示
+  transparent: true,
+  side: THREE.DoubleSide
 });
 
 const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
@@ -108,7 +108,7 @@ function createColorPoints() {
         const sphereMat = new THREE.MeshBasicMaterial({
           color: new THREE.Color(x, y, z),
           transparent: true,
-          opacity: 0.8
+          opacity: 0.6
         });
         const sphere = new THREE.Mesh(sphereGeo, sphereMat);
         sphere.position.set(x, y, z);
