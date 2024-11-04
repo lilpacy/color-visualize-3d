@@ -3829,15 +3829,15 @@ void main() {
   <div class="controls">
     <div class="slider-group">
       <label>R: <span id="r-value">0</span></label>
-      <input type="range" id="r-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="r-slider" min="1" max="256" step="1" value="1">
     </div>
     <div class="slider-group">
       <label>G: <span id="g-value">0</span></label>
-      <input type="range" id="g-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="g-slider" min="1" max="256" step="1" value="1">
     </div>
     <div class="slider-group">
       <label>B: <span id="b-value">0</span></label>
-      <input type="range" id="b-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="b-slider" min="1" max="256" step="1" value="1">
     </div>
     <div id="current-color" style="width: 50px; height: 50px; border: 1px solid white;"></div>
   </div>
@@ -3857,4 +3857,4 @@ void main() {
         gl_FragColor = vec4(color, 0.3);
       }
     }
-  `,transparent:!0,side:Xe,depthWrite:!1}),dl=new Le(am,om);dl.position.set(.5,.5,.5);hn.add(dl);const lm=new Nr(.04),cm=new Lr({color:0,transparent:!0,opacity:.8}),ea=new Le(lm,cm);hn.add(ea);const Ni=new Ii;hn.add(Ni);function hm(){for(;Ni.children.length>0;)Ni.remove(Ni.children[0]);const i=new Nr(.01);for(let t=0;t<=1;t+=.1)for(let e=0;e<=1;e+=.1)for(let n=0;n<=1;n+=.1){const r=new Lr({color:new Bt(t,e,n),transparent:!0,opacity:.6}),s=new Le(i,r);s.position.set(t,e,n),Ni.add(s)}}hm();const fl=new kp(1,10);fl.position.set(.5,0,.5);hn.add(fl);const um=new Wp(1.2);hn.add(um);function pa(i,t){const e=document.createElement("canvas"),n=e.getContext("2d");e.width=64,e.height=32,n.fillStyle="#ffffff",n.font="24px Arial",n.fillText(i,0,24);const r=new Vp(e),s=new ll({map:r}),a=new Hp(s);return a.position.copy(t),a.scale.set(.5,.25,1),a}hn.add(pa("R",new U(1.3,0,0)));hn.add(pa("G",new U(0,1.3,0)));hn.add(pa("B",new U(0,0,1.3)));function dm(){const i=parseFloat(document.getElementById("r-slider").value),t=parseFloat(document.getElementById("g-slider").value),e=parseFloat(document.getElementById("b-slider").value);ea.position.set(i,t,e),ea.material.color.setRGB(i,t,e),document.getElementById("r-value").textContent=i.toFixed(2),document.getElementById("g-value").textContent=t.toFixed(2),document.getElementById("b-value").textContent=e.toFixed(2),document.getElementById("current-color").style.backgroundColor=`rgb(${i*255}, ${t*255}, ${e*255})`}["r-slider","g-slider","b-slider"].forEach(i=>{document.getElementById(i).addEventListener("input",dm)});function pl(){requestAnimationFrame(pl),un.update(),Vi.render(hn,gi)}window.addEventListener("resize",()=>{gi.aspect=window.innerWidth/window.innerHeight,gi.updateProjectionMatrix(),Vi.setSize(window.innerWidth,window.innerHeight)});pl();
+  `,transparent:!0,side:Xe,depthWrite:!1}),dl=new Le(am,om);dl.position.set(.5,.5,.5);hn.add(dl);const lm=new Nr(.04),cm=new Lr({color:0,transparent:!0,opacity:.8}),ea=new Le(lm,cm);hn.add(ea);const Ni=new Ii;hn.add(Ni);function hm(){for(;Ni.children.length>0;)Ni.remove(Ni.children[0]);const i=new Nr(.01);for(let t=0;t<=1;t+=.1)for(let e=0;e<=1;e+=.1)for(let n=0;n<=1;n+=.1){const r=new Lr({color:new Bt(t,e,n),transparent:!0,opacity:.6}),s=new Le(i,r);s.position.set(t,e,n),Ni.add(s)}}hm();const fl=new kp(1,10);fl.position.set(.5,0,.5);hn.add(fl);const um=new Wp(1.2);hn.add(um);function pa(i,t){const e=document.createElement("canvas"),n=e.getContext("2d");e.width=64,e.height=32,n.fillStyle="#ffffff",n.font="24px Arial",n.fillText(i,0,24);const r=new Vp(e),s=new ll({map:r}),a=new Hp(s);return a.position.copy(t),a.scale.set(.5,.25,1),a}hn.add(pa("R",new U(1.3,0,0)));hn.add(pa("G",new U(0,1.3,0)));hn.add(pa("B",new U(0,0,1.3)));function dm(){const i=(parseFloat(document.getElementById("r-slider").value)-1)/255,t=(parseFloat(document.getElementById("g-slider").value)-1)/255,e=(parseFloat(document.getElementById("b-slider").value)-1)/255;ea.position.set(i,t,e),ea.material.color.setRGB(i,t,e),document.getElementById("r-value").textContent=Math.round(i*255+1),document.getElementById("g-value").textContent=Math.round(t*255+1),document.getElementById("b-value").textContent=Math.round(e*255+1),document.getElementById("current-color").style.backgroundColor=`rgb(${i*255}, ${t*255}, ${e*255})`}["r-slider","g-slider","b-slider"].forEach(i=>{document.getElementById(i).addEventListener("input",dm)});function pl(){requestAnimationFrame(pl),un.update(),Vi.render(hn,gi)}window.addEventListener("resize",()=>{gi.aspect=window.innerWidth/window.innerHeight,gi.updateProjectionMatrix(),Vi.setSize(window.innerWidth,window.innerHeight)});pl();
