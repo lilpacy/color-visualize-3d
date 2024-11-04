@@ -11,15 +11,15 @@ document.querySelector('#app').innerHTML = `
   <div class="controls">
     <div class="slider-group">
       <label>R: <span id="r-value">0</span></label>
-      <input type="range" id="r-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="r-slider" min="1" max="256" step="1" value="1">
     </div>
     <div class="slider-group">
       <label>G: <span id="g-value">0</span></label>
-      <input type="range" id="g-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="g-slider" min="1" max="256" step="1" value="1">
     </div>
     <div class="slider-group">
       <label>B: <span id="b-value">0</span></label>
-      <input type="range" id="b-slider" min="0" max="1" step="0.01" value="0">
+      <input type="range" id="b-slider" min="1" max="256" step="1" value="1">
     </div>
     <div id="current-color" style="width: 50px; height: 50px; border: 1px solid white;"></div>
   </div>
@@ -159,19 +159,20 @@ scene.add(createLabel('B', new THREE.Vector3(0, 0, 1.3)));
 
 // スライダーの制御
 function updateMarkerPosition() {
-  const r = parseFloat(document.getElementById('r-slider').value);
-  const g = parseFloat(document.getElementById('g-slider').value);
-  const b = parseFloat(document.getElementById('b-slider').value);
+  // 256段階から0-1の範囲に変換
+  const r = (parseFloat(document.getElementById('r-slider').value) - 1) / 255;
+  const g = (parseFloat(document.getElementById('g-slider').value) - 1) / 255;
+  const b = (parseFloat(document.getElementById('b-slider').value) - 1) / 255;
   
   marker.position.set(r, g, b);
   
   // マーカーの色を更新
   marker.material.color.setRGB(r, g, b);
   
-  // 値の表示を更新
-  document.getElementById('r-value').textContent = r.toFixed(2);
-  document.getElementById('g-value').textContent = g.toFixed(2);
-  document.getElementById('b-value').textContent = b.toFixed(2);
+  // 値の表示を更新（1-256の範囲で表示）
+  document.getElementById('r-value').textContent = Math.round(r * 255 + 1);
+  document.getElementById('g-value').textContent = Math.round(g * 255 + 1);
+  document.getElementById('b-value').textContent = Math.round(b * 255 + 1);
   
   // カラープレビューの更新
   document.getElementById('current-color').style.backgroundColor = 
