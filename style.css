@@ -103,6 +103,18 @@ button:focus-visible {
   padding: 20px;
   border-radius: 10px;
   color: white;
+  min-width: 250px;
+  }
+  
+  .control-section {
+    margin-bottom: 20px;
+  }
+  
+  .control-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
 }
 
 .slider-group {
@@ -112,12 +124,15 @@ button:focus-visible {
 .slider-group label {
   display: block;
   margin-bottom: 5px;
+  font-size: 0.9em;
 }
 
 input[type="range"] {
-  width: 200px;
+  width: 100%;
+    margin: 0;
 }
 
 #current-color {
-  margin-top: 10px;
+  margin: 10px auto;
+    border-radius: 5px;
 }
