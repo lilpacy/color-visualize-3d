@@ -78,7 +78,7 @@ class ColorVisualizerApp {
     this.rgbCamera.position.set(2, 1.5, 2);  // より近くに配置
 
     // HSVカメラの設定
-    this.hsvCamera.position.set(1.5, 1.5, 1.5);    // より近くに配置
+    this.hsvCamera.position.set(1.1, 1.1, 1.1);    // より近くに配置
   }
 
   setupControls() {
