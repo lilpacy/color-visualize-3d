@@ -7,11 +7,18 @@ import { HSVCone } from './components/HSVCone.js';
 
 class ColorVisualizerApp {
   constructor() {
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer();
-    this.controls = null;
+    // RGBキューブ用のプロパティ
+    this.rgbScene = new THREE.Scene();
+    this.rgbCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    this.rgbRenderer = new THREE.WebGLRenderer();
+    this.rgbControls = null;
     this.rgbCube = new RGBCube();
+
+    // HSVコーン用のプロパティ
+    this.hsvScene = new THREE.Scene();
+    this.hsvCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    this.hsvRenderer = new THREE.WebGLRenderer();
+    this.hsvControls = null;
     this.hsvCone = new HSVCone();
 
     this.initialize();
@@ -19,10 +26,10 @@ class ColorVisualizerApp {
 
   initialize() {
     // レンダラーの設定
-    this.setupRenderer();
+    this.setupRenderers();
     
     // カメラの設定
-    this.setupCamera();
+    this.setupCameras();
     
     // コントロールの設定
     this.setupControls();
@@ -34,8 +41,8 @@ class ColorVisualizerApp {
     this.createUI();
     
     // シーンへの追加
-    this.scene.add(this.rgbCube.getGroup());
-    this.scene.add(this.hsvCone.getGroup());
+    this.rgbScene.add(this.rgbCube.getGroup());
+    this.hsvScene.add(this.hsvCone.getGroup());
     
     // イベントリスナーの設定
     this.setupEventListeners();
@@ -44,255 +51,249 @@ class ColorVisualizerApp {
     this.animate();
   }
 
-  setupRenderer() {
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.querySelector('#app').appendChild(this.renderer.domElement);
+  setupRenderers() {
+    // RGBレンダラーの設定
+    this.rgbRenderer.setSize(400, 400);
+    this.rgbRenderer.setClearColor(0x242424);
+
+    // HSVレンダラーの設定
+    this.hsvRenderer.setSize(400, 400);
+    this.hsvRenderer.setClearColor(0x242424);
   }
 
-  setupCamera() {
-    this.camera.position.set(3, 2, 3);
-    this.camera.lookAt(0.5, 0.5, 0.5);
+  setupCameras() {
+    // RGBカメラの設定
+    this.rgbCamera.position.set(3, 2, 3);
+    this.rgbCamera.lookAt(0.5, 0.5, 0.5);
+
+    // HSVカメラの設定
+    this.hsvCamera.position.set(3, 2, 3);
+    this.hsvCamera.lookAt(0, 0.5, 0);
   }
 
   setupControls() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    
-    this.controls.mouseButtons = {
+    // RGBコントロールの設定
+    this.rgbControls = new OrbitControls(this.rgbCamera, this.rgbRenderer.domElement);
+    this.setupControlsCommon(this.rgbControls);
+
+    // HSVコントロールの設定
+    this.hsvControls = new OrbitControls(this.hsvCamera, this.hsvRenderer.domElement);
+    this.setupControlsCommon(this.hsvControls);
+  }
+
+  setupControlsCommon(controls) {
+    controls.mouseButtons = {
       LEFT: THREE.MOUSE.ROTATE,
       MIDDLE: THREE.MOUSE.PAN,
       RIGHT: THREE.MOUSE.DOLLY
     };
 
-    this.controls.touches = {
+    controls.touches = {
       ONE: THREE.TOUCH.ROTATE,
       TWO: THREE.TOUCH.PAN
     };
 
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.panSpeed = 1.0;
-    this.controls.rotateSpeed = 0.8;
-    this.controls.zoomSpeed = 1.2;
-    this.controls.enableZoom = true;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.panSpeed = 1.0;
+    controls.rotateSpeed = 0.8;
+    controls.zoomSpeed = 1.2;
+    controls.enableZoom = true;
   }
 
   addHelpers() {
-    const gridHelper = new THREE.GridHelper(1, 10);
-    gridHelper.position.set(0.5, 0, 0.5);
-    this.scene.add(gridHelper);
+    // RGBシーンにヘルパーを追加
+    const rgbGridHelper = new THREE.GridHelper(1, 10);
+    rgbGridHelper.position.set(0.5, 0, 0.5);
+    this.rgbScene.add(rgbGridHelper);
+    const rgbAxesHelper = new THREE.AxesHelper(1.2);
+    this.rgbScene.add(rgbAxesHelper);
+    this.addAxisLabels(this.rgbScene);
 
-    const axesHelper = new THREE.AxesHelper(1.2);
-    this.scene.add(axesHelper);
-
-    this.addAxisLabels();
+    // HSVシーンにヘルパーを追加
+    const hsvGridHelper = new THREE.GridHelper(1, 10);
+    this.hsvScene.add(hsvGridHelper);
+    const hsvAxesHelper = new THREE.AxesHelper(1.2);
+    this.hsvScene.add(hsvAxesHelper);
   }
 
-  addAxisLabels() {
+  addAxisLabels(scene) {
     const createLabel = (text, position) => {
       const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
       canvas.width = 64;
       canvas.height = 32;
-      
+      const context = canvas.getContext('2d');
       context.fillStyle = '#ffffff';
       context.font = '24px Arial';
       context.fillText(text, 0, 24);
       
       const texture = new THREE.CanvasTexture(canvas);
-      const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-      const sprite = new THREE.Sprite(spriteMaterial);
+      const material = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(material);
       sprite.position.copy(position);
-      sprite.scale.set(0.5, 0.25, 1);
+      sprite.scale.set(0.2, 0.1, 1);
       return sprite;
     };
 
-    this.scene.add(createLabel('R', new THREE.Vector3(1.3, 0, 0)));
-    this.scene.add(createLabel('G', new THREE.Vector3(0, 1.3, 0)));
-    this.scene.add(createLabel('B', new THREE.Vector3(0, 0, 1.3)));
+    scene.add(createLabel('X', new THREE.Vector3(1.3, 0, 0)));
+    scene.add(createLabel('Y', new THREE.Vector3(0, 1.3, 0)));
+    scene.add(createLabel('Z', new THREE.Vector3(0, 0, 1.3)));
   }
 
   createUI() {
-    document.querySelector('#app').innerHTML = `
-      <div class="controls">
-        <div class="control-section">
-          <h3>RGB</h3>
-          <div class="slider-group">
-            <label>R: <span id="r-value">0</span></label>
-            <input type="range" id="r-slider" min="1" max="256" step="1" value="1">
-          </div>
-          <div class="slider-group">
-            <label>G: <span id="g-value">0</span></label>
-            <input type="range" id="g-slider" min="1" max="256" step="1" value="1">
-          </div>
-          <div class="slider-group">
-            <label>B: <span id="b-value">0</span></label>
-            <input type="range" id="b-slider" min="1" max="256" step="1" value="1">
-          </div>
+    const appDiv = document.querySelector('#app');
+    appDiv.innerHTML = `
+      <div class="visualizer-container">
+        <div class="canvas-container">
+          <div id="rgb-canvas-container"></div>
+          <div id="hsv-canvas-container"></div>
         </div>
-        <div class="control-section">
-          <h3>HSV</h3>
-          <div class="slider-group">
-            <label>H: <span id="h-value">0</span>°</label>
-            <input type="range" id="h-slider" min="0" max="360" step="1" value="0">
+        <div class="controls">
+          <div class="control-section">
+            <h3>RGB</h3>
+            <div class="slider-group">
+              <label>R: <span id="r-value">0</span></label>
+              <input type="range" id="r-slider" min="1" max="256" step="1" value="1">
+            </div>
+            <div class="slider-group">
+              <label>G: <span id="g-value">0</span></label>
+              <input type="range" id="g-slider" min="1" max="256" step="1" value="1">
+            </div>
+            <div class="slider-group">
+              <label>B: <span id="b-value">0</span></label>
+              <input type="range" id="b-slider" min="1" max="256" step="1" value="1">
+            </div>
           </div>
-          <div class="slider-group">
-            <label>S: <span id="s-value">0</span>%</label>
-            <input type="range" id="s-slider" min="0" max="100" step="1" value="0">
+          <div class="control-section">
+            <h3>HSV</h3>
+            <div class="slider-group">
+              <label>H: <span id="h-value">0</span>°</label>
+              <input type="range" id="h-slider" min="0" max="360" step="1" value="0">
+            </div>
+            <div class="slider-group">
+              <label>S: <span id="s-value">0</span>%</label>
+              <input type="range" id="s-slider" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="slider-group">
+              <label>V: <span id="v-value">0</span>%</label>
+              <input type="range" id="v-slider" min="0" max="100" step="1" value="0">
+            </div>
           </div>
-          <div class="slider-group">
-            <label>V: <span id="v-value">0</span>%</label>
-            <input type="range" id="v-slider" min="0" max="100" step="1" value="0">
+          <div id="current-color"></div>
+          <div class="hsv-view">
+            <canvas id="hsv-cone" width="200" height="200"></canvas>
+            <canvas id="hue-slider" width="200" height="20"></canvas>
           </div>
-        </div>
-        <div id="current-color" style="width: 50px; height: 50px; border: 1px solid white;"></div>
-        <div class="hsv-view">
-          <canvas id="hsv-cone" width="200" height="200"></canvas>
-          <canvas id="hue-slider" width="200" height="20"></canvas>
         </div>
       </div>
     `;
-    document.querySelector('#app').appendChild(this.renderer.domElement);
-  }
 
-  updateMarkerPosition(source = 'rgb') {
-    let r, g, b, h, s, v;
-
-    if (source === 'rgb') {
-      r = (parseFloat(document.getElementById('r-slider').value) - 1) / 255;
-      g = (parseFloat(document.getElementById('g-slider').value) - 1) / 255;
-      b = (parseFloat(document.getElementById('b-slider').value) - 1) / 255;
-      
-      [h, s, v] = rgbToHsv(r * 255, g * 255, b * 255);
-      
-      // HSVスライダーを更新
-      document.getElementById('h-slider').value = h;
-      document.getElementById('s-slider').value = s;
-      document.getElementById('v-slider').value = v;
-      document.getElementById('h-value').textContent = Math.round(h);
-      document.getElementById('s-value').textContent = Math.round(s);
-      document.getElementById('v-value').textContent = Math.round(v);
-    } else {
-      h = parseFloat(document.getElementById('h-slider').value);
-      s = parseFloat(document.getElementById('s-slider').value);
-      v = parseFloat(document.getElementById('v-slider').value);
-      
-      [r, g, b] = hsvToRgb(h, s, v);
-      
-      // RGBスライダーを更新
-      document.getElementById('r-slider').value = Math.round(r * 255) + 1;
-      document.getElementById('g-slider').value = Math.round(g * 255) + 1;
-      document.getElementById('b-slider').value = Math.round(b * 255) + 1;
-      document.getElementById('r-value').textContent = Math.round(r * 255) + 1;
-      document.getElementById('g-value').textContent = Math.round(g * 255) + 1;
-      document.getElementById('b-value').textContent = Math.round(b * 255) + 1;
-    }
-
-    const color = new THREE.Color(r, g, b);
-    
-    // マーカーの更新
-    this.rgbCube.updateMarkerPosition(r, g, b);
-    this.hsvCone.updateMarkerPosition(h, s, v, color);
-    
-    // カラーパネルの更新
-    document.getElementById('current-color').style.backgroundColor = 
-      `rgb(${r * 255}, ${g * 255}, ${b * 255})`;
-    
-    // HSVビューの更新
-    this.updateHSVView();
+    // レンダラーの追加
+    document.getElementById('rgb-canvas-container').appendChild(this.rgbRenderer.domElement);
+    document.getElementById('hsv-canvas-container').appendChild(this.hsvRenderer.domElement);
   }
 
   setupEventListeners() {
-    ['r-slider', 'g-slider', 'b-slider'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => this.updateMarkerPosition('rgb'));
-    });
-
-    ['h-slider', 's-slider', 'v-slider'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => this.updateMarkerPosition('hsv'));
-    });
-
-    window.addEventListener('resize', () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // RGBスライダーのイベントリスナー
+    const rSlider = document.getElementById('r-slider');
+    const gSlider = document.getElementById('g-slider');
+    const bSlider = document.getElementById('b-slider');
+    
+    const updateRGBValues = () => {
+      const r = rSlider.value / 255;
+      const g = gSlider.value / 255;
+      const b = bSlider.value / 255;
+      
+      document.getElementById('r-value').textContent = Math.round(r * 255);
+      document.getElementById('g-value').textContent = Math.round(g * 255);
+      document.getElementById('b-value').textContent = Math.round(b * 255);
+      
+      // マーカーの位置を更新
+      this.rgbCube.updateMarkerPosition(r, g, b);
+      
+      // HSV値を計算して更新
+      const [h, s, v] = rgbToHsv(r * 255, g * 255, b * 255);
+      this.updateHSVSliders(h, s, v);
+      
+      // HSVコーンのマーカーを更新
+      const color = new THREE.Color(r, g, b);
+      this.hsvCone.updateMarkerPosition(h, s, v, color);
+      
+      // カラーディスプレイを更新
+      this.updateColorDisplay(r, g, b);
+    };
+    
+    rSlider.addEventListener('input', updateRGBValues);
+    gSlider.addEventListener('input', updateRGBValues);
+    bSlider.addEventListener('input', updateRGBValues);
+    
+    // HSVスライダーのイベントリスナー
+    const hSlider = document.getElementById('h-slider');
+    const sSlider = document.getElementById('s-slider');
+    const vSlider = document.getElementById('v-slider');
+    
+    const updateHSVValues = () => {
+      const h = parseFloat(hSlider.value);
+      const s = parseFloat(sSlider.value);
+      const v = parseFloat(vSlider.value);
+      
+      document.getElementById('h-value').textContent = Math.round(h);
+      document.getElementById('s-value').textContent = Math.round(s);
+      document.getElementById('v-value').textContent = Math.round(v);
+      
+      // RGB値を計算
+      const [r, g, b] = hsvToRgb(h, s, v);
+      
+      // RGBスライダーを更新
+      this.updateRGBSliders(r, g, b);
+      
+      // マーカーの位置を更新
+      this.rgbCube.updateMarkerPosition(r, g, b);
+      
+      // HSVコーンのマーカーを更新
+      const color = new THREE.Color(r, g, b);
+      this.hsvCone.updateMarkerPosition(h, s, v, color);
+      
+      // カラーディスプレイを更新
+      this.updateColorDisplay(r, g, b);
+    };
+    
+    hSlider.addEventListener('input', updateHSVValues);
+    sSlider.addEventListener('input', updateHSVValues);
+    vSlider.addEventListener('input', updateHSVValues);
   }
 
-  updateHSVView() {
-    this.drawHSVCone();
-    this.drawHueSlider();
+  updateRGBSliders(r, g, b) {
+    document.getElementById('r-slider').value = r * 255;
+    document.getElementById('g-slider').value = g * 255;
+    document.getElementById('b-slider').value = b * 255;
+    document.getElementById('r-value').textContent = Math.round(r * 255);
+    document.getElementById('g-value').textContent = Math.round(g * 255);
+    document.getElementById('b-value').textContent = Math.round(b * 255);
   }
 
-  drawHSVCone() {
-    const canvas = document.getElementById('hsv-cone');
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 10;
-    
-    const currentHue = parseFloat(document.getElementById('h-slider').value);
-    
-    ctx.clearRect(0, 0, width, height);
-    
-    for(let r = radius; r > 0; r--) {
-      for(let angle = 0; angle < 360; angle += 1) {
-        const x = centerX + r * Math.cos(angle * Math.PI / 180);
-        const y = centerY + r * Math.sin(angle * Math.PI / 180);
-        
-        const saturation = r / radius * 100;
-        const value = 100;
-        
-        const [red, green, blue] = hsvToRgb(currentHue, saturation, value);
-        ctx.fillStyle = `rgb(${red * 255}, ${green * 255}, ${blue * 255})`;
-        ctx.fillRect(x, y, 2, 2);
-      }
-    }
-    
-    const currentS = parseFloat(document.getElementById('s-slider').value);
-    const currentV = parseFloat(document.getElementById('v-slider').value);
-    const angle = currentHue * Math.PI / 180;
-    const distance = (currentS / 100) * radius;
-    const x = centerX + distance * Math.cos(angle);
-    const y = centerY + distance * Math.sin(angle);
-    
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+  updateHSVSliders(h, s, v) {
+    document.getElementById('h-slider').value = h;
+    document.getElementById('s-slider').value = s;
+    document.getElementById('v-slider').value = v;
+    document.getElementById('h-value').textContent = Math.round(h);
+    document.getElementById('s-value').textContent = Math.round(s);
+    document.getElementById('v-value').textContent = Math.round(v);
   }
 
-  drawHueSlider() {
-    const canvas = document.getElementById('hue-slider');
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    const gradient = ctx.createLinearGradient(0, 0, width, 0);
-    for(let i = 0; i <= 360; i += 60) {
-      const [r, g, b] = hsvToRgb(i, 100, 100);
-      gradient.addColorStop(i / 360, `rgb(${r * 255}, ${g * 255}, ${b * 255})`);
-    }
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-    
-    const currentHue = parseFloat(document.getElementById('h-slider').value);
-    const x = (currentHue / 360) * width;
-    
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+  updateColorDisplay(r, g, b) {
+    const colorDisplay = document.getElementById('current-color');
+    colorDisplay.style.backgroundColor = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+    colorDisplay.style.width = '100px';
+    colorDisplay.style.height = '100px';
   }
 
   animate() {
     requestAnimationFrame(() => this.animate());
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    this.rgbControls.update();
+    this.hsvControls.update();
+    this.rgbRenderer.render(this.rgbScene, this.rgbCamera);
+    this.hsvRenderer.render(this.hsvScene, this.hsvCamera);
   }
 }
 

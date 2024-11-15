@@ -25,7 +25,7 @@ export class HSVCone {
     this.group.add(this.marker);
     
     // 位置の設定
-    this.group.position.set(2, 0, 0.5);
+    this.group.position.set(0, 0, 0);
   }
 
   createCone() {
