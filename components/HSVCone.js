@@ -57,6 +57,35 @@ export class HSVCone {
       }
     }
     
+    // 内部に補完的な点を追加
+    const gridSize = 8; // グリッドの細かさ
+    for (let ring = 1; ring <= this.rings; ring++) {
+      const v = ring / this.rings;
+      const currentRadius = (this.radius * ring) / this.rings;
+      
+      // 円形の内部をグリッド状に埋める
+      for (let x = -currentRadius; x <= currentRadius; x += currentRadius / gridSize) {
+        for (let z = -currentRadius; z <= currentRadius; z += currentRadius / gridSize) {
+          // 現在の点が円の内部にあるか確認
+          const distanceFromCenter = Math.sqrt(x * x + z * z);
+          if (distanceFromCenter <= currentRadius) {
+            const y = v * this.height;
+            
+            // HSV値を計算
+            const theta = Math.atan2(z, x);
+            const hue = ((theta < 0 ? theta + 2 * Math.PI : theta) / (Math.PI * 2)) * 360;
+            const saturation = (distanceFromCenter / this.radius) * 100;
+            const value = v * 100;
+            
+            const [r, g, b] = hsvToRgb(hue, saturation, value);
+            
+            points.push(new THREE.Vector3(x, y, z));
+            colors.push(new THREE.Color(r, g, b));
+          }
+        }
+      }
+    }
+    
     const geometry = new THREE.BufferGeometry();
     geometry.setFromPoints(points);
     
