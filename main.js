@@ -49,6 +49,18 @@ class ColorVisualizerApp {
     
     // アニメーションの開始
     this.animate();
+
+    // 初期値の設定と表示
+    const initialR = 1;
+    const initialG = 1;
+    const initialB = 1;
+    this.updateRGBSliders(initialR, initialG, initialB);
+    this.rgbCube.updateMarkerPosition(initialR, initialG, initialB);
+    const [h, s, v] = rgbToHsv(initialR * 255, initialG * 255, initialB * 255);
+    this.updateHSVSliders(h, s, v);
+    const color = new THREE.Color(initialR, initialG, initialB);
+    this.hsvCone.updateMarkerPosition(h, s, v, color);
+    this.updateColorDisplay(initialR, initialG, initialB);
   }
 
   setupRenderers() {
