@@ -110,11 +110,11 @@ class ColorVisualizerApp {
     this.rgbScene.add(rgbAxesHelper);
     this.addAxisLabels(this.rgbScene);
 
-    // HSVシーンにヘルパーを追加
-    const hsvGridHelper = new THREE.GridHelper(1, 10);
-    this.hsvScene.add(hsvGridHelper);
-    const hsvAxesHelper = new THREE.AxesHelper(1.2);
-    this.hsvScene.add(hsvAxesHelper);
+    // HSVシーンのヘルパーを削除
+    // const hsvGridHelper = new THREE.GridHelper(1, 10);
+    // this.hsvScene.add(hsvGridHelper);
+    // const hsvAxesHelper = new THREE.AxesHelper(1.2);
+    // this.hsvScene.add(hsvAxesHelper);
   }
 
   addAxisLabels(scene) {
