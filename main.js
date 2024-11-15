@@ -298,16 +298,17 @@ class ColorVisualizerApp {
     colorDisplay.style.height = '100px';
 
     // コピーボタンのイベントリスナーを設定
-    document.getElementById('copy-color-btn').addEventListener('click', () => {
-      navigator.clipboard.writeText(rgbValue)
-        .then(() => {
-          alert('色コードをクリップボードにコピーしました！');
-        })
-        .catch(err => {
-          console.error('クリップボードへのコピーに失敗しました:', err);
-          alert('コピーに失敗しました。');
-        });
-    });
+    const copyButton = document.getElementById('copy-color-btn');
+    copyButton.onclick = () => {
+        navigator.clipboard.writeText(rgbValue)
+            .then(() => {
+                alert('Color code copied to clipboard!');
+            })
+            .catch(err => {
+                console.error('Failed to copy to clipboard:', err);
+                alert('Copy failed.');
+            });
+    };
   }
 
   animate() {
