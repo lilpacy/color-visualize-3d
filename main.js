@@ -145,9 +145,9 @@ class ColorVisualizerApp {
       return sprite;
     };
 
-    scene.add(createLabel('X', new THREE.Vector3(1.3, 0, 0)));
-    scene.add(createLabel('Y', new THREE.Vector3(0, 1.3, 0)));
-    scene.add(createLabel('Z', new THREE.Vector3(0, 0, 1.3)));
+    scene.add(createLabel('R', new THREE.Vector3(1.3, 0, 0)));
+    scene.add(createLabel('G', new THREE.Vector3(0, 1.3, 0)));
+    scene.add(createLabel('B', new THREE.Vector3(0, 0, 1.3)));
   }
 
   createUI() {
