@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import './style.css';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { hsvToRgb, rgbToHsv } from './utils/colorConversion.js';
+import { createCube, createColorPoints } from './components/RGBCube.js';
+import { createHSVCone } from './components/HSVCone.js';
 
 // シーンのセットアップ
 const scene = new THREE.Scene();
@@ -79,77 +81,6 @@ controls.zoomSpeed = 1.2;       // ズームの速度
 // ホイールでのズームも有効化
 controls.enableZoom = true;
 
-// RGBカラーキューブの作成
-function createCube() {
-  const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const cubeMaterial = new THREE.ShaderMaterial({
-    vertexShader: `
-      varying vec3 vPosition;
-      void main() {
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vPosition;
-      void main() {
-        vec3 color = vPosition;
-        if(abs(vPosition.x) == 0.5 || abs(vPosition.y) == 0.5 || abs(vPosition.z) == 0.5) {
-          gl_FragColor = vec4(color, 0.0);
-        } else {
-          gl_FragColor = vec4(color, 0.3);
-        }
-      }
-    `,
-    transparent: true,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-
-  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-  cube.position.set(0.5, 0.5, 0.5);
-  return cube;
-}
-
-// 現在位置を示すマーカーの作成
-const markerGeometry = new THREE.SphereGeometry(0.04);
-const markerMaterial = new THREE.MeshBasicMaterial({ 
-  color: 0x000000,
-  transparent: true,
-  opacity: 0.8
-});
-const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-scene.add(marker);
-
-// 10ポイントごとのカラーポイントを追加
-const pointsGroup = new THREE.Group();
-scene.add(pointsGroup);
-
-function createColorPoints() {
-  // 既存のポイントをクリア
-  while(pointsGroup.children.length > 0) {
-    pointsGroup.remove(pointsGroup.children[0]);
-  }
-
-  const sphereGeo = new THREE.SphereGeometry(0.01);
-  for(let x = 0; x <= 1; x += 0.1) {
-    for(let y = 0; y <= 1; y += 0.1) {
-      for(let z = 0; z <= 1; z += 0.1) {
-        const sphereMat = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(x, y, z),
-          transparent: true,
-          opacity: 0.6
-        });
-        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-        sphere.position.set(x, y, z);
-        pointsGroup.add(sphere);
-      }
-    }
-  }
-}
-
-createColorPoints();
-
 // グリッドヘルパーの追加
 const gridHelper = new THREE.GridHelper(1, 10);
 gridHelper.position.set(0.5, 0, 0.5);
@@ -181,56 +112,6 @@ function createLabel(text, position) {
 scene.add(createLabel('R', new THREE.Vector3(1.3, 0, 0)));
 scene.add(createLabel('G', new THREE.Vector3(0, 1.3, 0)));
 scene.add(createLabel('B', new THREE.Vector3(0, 0, 1.3)));
-
-// HSVからRGBへの変換関数を追加
-function hsvToRgb(h, s, v) {
-  s = s / 100;
-  v = v / 100;
-  const i = Math.floor(h / 60);
-  const f = h / 60 - i;
-  const p = v * (1 - s);
-  const q = v * (1 - f * s);
-  const t = v * (1 - (1 - f) * s);
-
-  let r, g, b;
-  switch (i % 6) {
-    case 0: [r, g, b] = [v, t, p]; break;
-    case 1: [r, g, b] = [q, v, p]; break;
-    case 2: [r, g, b] = [p, v, t]; break;
-    case 3: [r, g, b] = [p, q, v]; break;
-    case 4: [r, g, b] = [t, p, v]; break;
-    case 5: [r, g, b] = [v, p, q]; break;
-  }
-  return [r, g, b];
-}
-
-// RGBからHSVへの変換関数を追加
-function rgbToHsv(r, g, b) {
-  r = r / 255;
-  g = g / 255;
-  b = b / 255;
-  
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const d = max - min;
-  
-  let h, s, v;
-  v = max;
-  s = max === 0 ? 0 : d / max;
-  
-  if (max === min) {
-    h = 0;
-  } else {
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h *= 60;
-  }
-  
-  return [h, s * 100, v * 100];
-}
 
 // スライダーの制御関数を更新
 function updateMarkerPosition(source = 'rgb') {
@@ -279,7 +160,7 @@ function updateMarkerAndColor(r, g, b) {
   const [h, s, v] = rgbToHsv(r * 255, g * 255, b * 255);
   const theta = (h / 360) * Math.PI * 2;
   
-  // 明度に応じて半径を調整（明度が下がると半径も比例して小さくなる）
+  // 明度に応じて半径を調整（明度が下が��と半径も比例して小さくなる）
   const maxRadius = 0.5 * (s / 100);
   const currentRadius = maxRadius * (v / 100);
   
@@ -319,7 +200,7 @@ window.addEventListener('resize', () => {
 });
 
 animate();
-// HSV円錐の描画関数を追加
+// HSV円錐の描���関数を追加
 function drawHSVCone() {
   const canvas = document.getElementById('hsv-cone');
   const ctx = canvas.getContext('2d');
@@ -421,75 +302,23 @@ function updateHSVView() {
 // 初期描画
 updateHSVView();
 
-function createHSVCone() {
-  const coneGroup = new THREE.Group();
-  const segments = 32;
-  const rings = 10;
-  const height = 1;
-  const radius = 0.5;
-  
-  // 円錐の頂点を生成
-  const points = [];
-  const colors = [];
-  
-  // 頂点（V=0の点）
-  points.push(new THREE.Vector3(0, 0, 0));
-  colors.push(new THREE.Color(0, 0, 0));
-  
-  // 各リングのポイントを生成
-  for (let ring = 1; ring <= rings; ring++) {
-    const v = ring / rings;
-    const currentRadius = (radius * ring) / rings;
-    
-    for (let segment = 0; segment < segments; segment++) {
-      const theta = (segment / segments) * Math.PI * 2;
-      const x = currentRadius * Math.cos(theta);
-      const z = currentRadius * Math.sin(theta);
-      const y = v * height;
-      
-      // HSVから RGB に変換
-      const hue = (theta / (Math.PI * 2)) * 360;
-      const saturation = (Math.sqrt(x * x + z * z) / radius) * 100;
-      const value = v * 100;
-      const [r, g, b] = hsvToRgb(hue, saturation, value);
-      
-      points.push(new THREE.Vector3(x, y, z));
-      colors.push(new THREE.Color(r, g, b));
-    }
-  }
-  
-  // ジオメトリの作成
-  const geometry = new THREE.BufferGeometry();
-  geometry.setFromPoints(points);
-  
-  // 色の設定
-  const colorArray = new Float32Array(colors.length * 3);
-  colors.forEach((color, i) => {
-    colorArray[i * 3] = color.r;
-    colorArray[i * 3 + 1] = color.g;
-    colorArray[i * 3 + 2] = color.b;
-  });
-  geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-  
-  // マテリアルの作成
-  const material = new THREE.PointsMaterial({
-    size: 0.02,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.8
-  });
-  
-  const pointCloud = new THREE.Points(geometry, material);
-  coneGroup.add(pointCloud);
-  
-  // HSV円錐を右側に配置
-  coneGroup.position.set(2, 0, 0.5);
-  return coneGroup;
-}
+// 現在位置を示すマーカーの作成
+const markerGeometry = new THREE.SphereGeometry(0.04);
+const markerMaterial = new THREE.MeshBasicMaterial({ 
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.8
+});
+const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+scene.add(marker);
 
 // シーンに追加
 const cube = createCube();
 scene.add(cube);
+
+// 点群の追加
+const pointsGroup = createColorPoints();
+scene.add(pointsGroup);
 
 const hsvCone = createHSVCone();
 scene.add(hsvCone);
