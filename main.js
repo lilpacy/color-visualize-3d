@@ -63,12 +63,10 @@ class ColorVisualizerApp {
 
   setupCameras() {
     // RGBカメラの設定
-    this.rgbCamera.position.set(3, 2, 3);
-    this.rgbCamera.lookAt(0.5, 0.5, 0.5);
+    this.rgbCamera.position.set(2, 1.5, 2);  // より近くに配置
 
     // HSVカメラの設定
-    this.hsvCamera.position.set(3, 2, 3);
-    this.hsvCamera.lookAt(0, 0.5, 0);
+    this.hsvCamera.position.set(1.5, 1.5, 1.5);    // より近くに配置
   }
 
   setupControls() {
@@ -180,10 +178,6 @@ class ColorVisualizerApp {
             </div>
           </div>
           <div id="current-color"></div>
-          <div class="hsv-view">
-            <canvas id="hsv-cone" width="200" height="200"></canvas>
-            <canvas id="hue-slider" width="200" height="20"></canvas>
-          </div>
         </div>
       </div>
     `;
