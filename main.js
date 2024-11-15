@@ -189,7 +189,10 @@ class ColorVisualizerApp {
               <input type="range" id="v-slider" min="0" max="100" step="1" value="0">
             </div>
           </div>
-          <div id="current-color"></div>
+          <div class="color-display-container">
+            <div id="current-color"></div>
+            <button id="copy-color-btn">Copy to Clipboard</button>
+          </div>
         </div>
       </div>
     `;
@@ -289,9 +292,22 @@ class ColorVisualizerApp {
 
   updateColorDisplay(r, g, b) {
     const colorDisplay = document.getElementById('current-color');
-    colorDisplay.style.backgroundColor = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+    const rgbValue = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+    colorDisplay.style.backgroundColor = rgbValue;
     colorDisplay.style.width = '100px';
     colorDisplay.style.height = '100px';
+
+    // コピーボタンのイベントリスナーを設定
+    document.getElementById('copy-color-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(rgbValue)
+        .then(() => {
+          alert('色コードをクリップボードにコピーしました！');
+        })
+        .catch(err => {
+          console.error('クリップボードへのコピーに失敗しました:', err);
+          alert('コピーに失敗しました。');
+        });
+    });
   }
 
   animate() {
