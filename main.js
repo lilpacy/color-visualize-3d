@@ -80,34 +80,36 @@ controls.zoomSpeed = 1.2;       // ズームの速度
 controls.enableZoom = true;
 
 // RGBカラーキューブの作成
-const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.ShaderMaterial({
-  vertexShader: `
-    varying vec3 vPosition;
-    void main() {
-      vPosition = position;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vPosition;
-    void main() {
-      vec3 color = vPosition;
-      if(abs(vPosition.x) == 0.5 || abs(vPosition.y) == 0.5 || abs(vPosition.z) == 0.5) {
-        gl_FragColor = vec4(color, 0.0);
-      } else {
-        gl_FragColor = vec4(color, 0.3);
+function createCube() {
+  const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const cubeMaterial = new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vPosition;
+      void main() {
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
-    }
-  `,
-  transparent: true,
-  side: THREE.DoubleSide,
-  depthWrite: false
-});
+    `,
+    fragmentShader: `
+      varying vec3 vPosition;
+      void main() {
+        vec3 color = vPosition;
+        if(abs(vPosition.x) == 0.5 || abs(vPosition.y) == 0.5 || abs(vPosition.z) == 0.5) {
+          gl_FragColor = vec4(color, 0.0);
+        } else {
+          gl_FragColor = vec4(color, 0.3);
+        }
+      }
+    `,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
 
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-cube.position.set(0.5, 0.5, 0.5);
-scene.add(cube);
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+  cube.position.set(0.5, 0.5, 0.5);
+  return cube;
+}
 
 // 現在位置を示すマーカーの作成
 const markerGeometry = new THREE.SphereGeometry(0.04);
@@ -317,7 +319,6 @@ window.addEventListener('resize', () => {
 });
 
 animate();
-
 // HSV円錐の描画関数を追加
 function drawHSVCone() {
   const canvas = document.getElementById('hsv-cone');
@@ -486,6 +487,10 @@ function createHSVCone() {
   return coneGroup;
 }
 
+// シーンに追加
+const cube = createCube();
+scene.add(cube);
+
 const hsvCone = createHSVCone();
 scene.add(hsvCone);
 
@@ -501,3 +506,4 @@ const hsvMarkerMaterial = new THREE.MeshBasicMaterial({
 });
 const hsvMarker = new THREE.Mesh(hsvMarkerGeometry, hsvMarkerMaterial);
 scene.add(hsvMarker);
+
